@@ -5,13 +5,14 @@
 class Wordle_Solver:
     # Set de palabras de 5 letras posibles
     wordset = []
-
     # Lista donde cada posicion corresponde a 1 letra de la palabra. Si no esta en -1 es porque la letra que aparece en la posicion forma parte de la solucion.
     result = ['-1','-1','-1','-1','-1']
     # Lista de letras que son parte de la palabra pero no conozco su posicion
     candidate_letters = []
     # Lista de letras que no son parte de la palabra
     non_candidate_letters = []
+    # Lista de palabras que no son validas en el wordle
+    invalid_words = []
 
     # Constructor de la clase
     def __init__(self):
@@ -49,8 +50,8 @@ class Wordle_Solver:
                     temp.remove(word[i])
                 i = i+1
 
-            # Una vez que recorrimos todas las letras de temp, si letras disponibles tiene size 0 y se respeta el result original es porque encontramos una palabra candidata.
-            if len(temp) == 0 and self.every_position_is_valid(word):
+            # Una vez que recorrimos todas las letras de temp, si letras disponibles tiene size 0 y se respeta el result original es porque encontramos una palabra candidata. Ademas nos fijamos que no este en invalid_words
+            if len(temp) == 0 and self.every_position_is_valid(word) and not word in self.invalid_words:
                 return word
             
             # Si no se cumple el statement del if, es porque hay letras de las disponibles que no fueron ubicadas, por lo que seguimos buscando. Reiniciamos el valor de temp con las disponibles.
@@ -81,3 +82,6 @@ class Wordle_Solver:
         
         # Actualiza el estado actual del result
         self.result = result
+
+    def add_invalid_word(self,word):
+        self.invalid_words.append(word)
