@@ -1,6 +1,4 @@
 
-# TODO: CONSIDERAR EL CASO EN EL QUE LA PALABRA DEL DATASET NO ESTA EN EL WORDLE.
-
 
 class Wordle_Solver:
     # Set de palabras de 5 letras posibles
@@ -13,6 +11,8 @@ class Wordle_Solver:
     non_candidate_letters = []
     # Lista de palabras que no son validas en el wordle
     invalid_words = []
+    # Lista de listas, en la que cada posicion del 0 al 4 tiene una lista de aquellas letras que NO pueden ir en esa posicion.
+    banned_letters_in_index = [[],[],[],[],[]]
 
     # Constructor de la clase
     def __init__(self):
@@ -58,30 +58,54 @@ class Wordle_Solver:
             temp = self.candidate_letters.copy()
     
     # Chequea que cada letra de la palabra sea valida, y por lo tanto sea candidata
-    def every_position_is_valid(self,word):
+    def every_position_is_valid(self,word:str) -> bool:
         res = True
         i = 0
         # Chequeo que las letras de la palabra respeten las que ya eran candidatas, y que no haya ninguna que no sea parte de las no candidatas
         while i < 5:
-            if not(self.result[i] == '-1' or word[i] == self.result[i]) or word[i] in self.non_candidate_letters :
+            if not(self.result[i] == '-1' or word[i] == self.result[i]) or word[i] in self.non_candidate_letters or word[i] in self.banned_letters_in_index[i]:
                 res = False
             i = i + 1
         return res
     
     # Actualiza el estado del wordle tras poner una palabra
-    def update_wordle_status(self, non_candidate_letters, candidate_letters, result):
+    # candidate_letters dictionary donde las keys son las letras, y el significado una lista de posiciones donde no puede ir.
+    def update_wordle_status(self, non_candidate_letters:list, candidate_letters:dict, result:list):
         # Agrega aquellas letras nuevas que no estaban en las no candidatas
         for letter in non_candidate_letters:
             if not letter in self.non_candidate_letters:
                 self.non_candidate_letters.append(letter)
         
         # Lo mismo para las candidatas
-        for letter in candidate_letters:
+        for letter in candidate_letters.keys():
             if not letter in self.candidate_letters:
                 self.candidate_letters.append(letter)
-        
+            
+            # Ademas, actualizamos las posiciones en las que NO pueden ir las candidatas.
+            for position in candidate_letters[letter]:
+                if not letter in self.banned_letters_in_index[position]:
+                    self.banned_letters_in_index[position].append(letter)
+
+        # Si alguna de las candidatas encontro su posicion correcta, la sacamos de las candidatas
+        for letter in result:
+            if letter in self.candidate_letters:
+                self.candidate_letters.remove(letter)
+
         # Actualiza el estado actual del result
         self.result = result
 
-    def add_invalid_word(self,word):
+    def add_invalid_word(self,word:str):
         self.invalid_words.append(word)
+
+# sample test
+# new = Wordle_Solver()
+# new.update_wordle_status(['U','R','E'],{"A":[0],"O":[4]},['-1','-1','-1','-1','-1',])
+# print(new.search_valid_word())
+# new.update_wordle_status(['B','C','N'],{"A":[1],"O":[3]},['-1','-1','-1','-1','-1',])
+# print(new.search_valid_word())
+# new.update_wordle_status(['D','S'],{"I":[1],"O":[2]},['-1','-1','-1','-1','A',])
+# print(new.search_valid_word())
+# new.update_wordle_status(['F','L'],{},['-1','O','-1','I','A',])
+# print(new.search_valid_word())
+# new.update_wordle_status(['G'],{},['-1','O','M','I','A',])
+# print(new.search_valid_word())
