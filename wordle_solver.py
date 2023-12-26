@@ -1,6 +1,6 @@
 
 
-class Wordle_Solver:
+class WordleSolver:
     # Set de palabras de 5 letras posibles
     wordset = []
     # Lista donde cada posicion corresponde a 1 letra de la palabra. Si no esta en -1 es porque la letra que aparece en la posicion forma parte de la solucion.
@@ -18,7 +18,7 @@ class Wordle_Solver:
     def __init__(self):
 
         #Abrir el archivo con las palabras
-        original_txt = open('dataset.txt','r')
+        original_txt = open('wordset.txt','r')
 
         #Leer el archivo con las palabras
         original_txt = original_txt.read()
@@ -26,7 +26,6 @@ class Wordle_Solver:
         #Armar la lista con las palabras
         current_word = ''
 
-        #Recorrer el txt armando la lista
         for letra in original_txt:
             #Si es un espacio lo agrego a la lista y sigo
             if letra == ' ':
@@ -63,7 +62,7 @@ class Wordle_Solver:
         i = 0
         # Chequeo que las letras de la palabra respeten las que ya eran candidatas, y que no haya ninguna que no sea parte de las no candidatas
         while i < 5:
-            if not(self.result[i] == '-1' or word[i] == self.result[i]) or word[i] in self.non_candidate_letters or word[i] in self.banned_letters_in_index[i]:
+            if not(self.result[i] == '-1' or word[i] == self.result[i]) or (word[i] in self.non_candidate_letters and self.result[i] == '-1') or word[i] in self.banned_letters_in_index[i]:
                 res = False
             i = i + 1
         return res
@@ -109,3 +108,4 @@ class Wordle_Solver:
 # print(new.search_valid_word())
 # new.update_wordle_status(['G'],{},['-1','O','M','I','A',])
 # print(new.search_valid_word())
+        
