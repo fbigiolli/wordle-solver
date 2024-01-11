@@ -25,6 +25,9 @@ def main():
 def search_and_type_word_loop(solver):
     prev_number_of_words_tried = 1
     prev_prediction = 'AUREO'
+    # Crear modelo knn para identificar los caracteres
+    images, labels = create_dataset_list()
+    knn_model = create_knn_model(images, labels)
 
     while(True):
         # Screenshot de la pagina y formateo para poder procesarla con cv2
@@ -50,7 +53,7 @@ def search_and_type_word_loop(solver):
             break
 
         # Predecir letras
-        predictions = (predict_word(letters))
+        predictions = (predict_word(letters,knn_model))
         update_wordle(predictions[-5:], solver)
 
         # Escribir la palabra
@@ -96,11 +99,7 @@ def type_word(word):
 
 
 # Ya teniendo el modelo KNN, predice las letras
-def predict_word(letters):
-    # Crear modelo knn para identificar los caracteres
-    images, labels = create_dataset_list()
-    knn_model = create_knn_model(images, labels)
-
+def predict_word(letters, knn_model):
     res = []
     # Identificar las letras
     for letter in letters:
