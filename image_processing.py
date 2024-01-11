@@ -1,7 +1,6 @@
 import pyautogui
 import cv2
 import numpy as np
-import skimage
 
 def take_screenshot():
     # Screenshot de la pagina y formateo para poder procesarla con cv2

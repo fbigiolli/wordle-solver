@@ -25,7 +25,7 @@ def main():
 def search_and_type_word_loop(solver):
     prev_number_of_words_tried = 1
     prev_prediction = 'AUREO'
-    
+
     while(True):
         # Screenshot de la pagina y formateo para poder procesarla con cv2
         screenshot = take_screenshot()
@@ -114,19 +114,3 @@ def predict_word(letters):
 
 
 main()
-
-    # contours,_ = cv2.findContours(preprocessed,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # for cnt in contours:
-    #     x1,y1 = cnt[0][0]
-    #     approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
-    #     if len(approx) == 4:
-    #         x, y, w, h = cv2.boundingRect(cnt)
-    #         ratio = float(w)/h
-    #         if ratio >= 0.9 and ratio <= 1.1 and w*h > 100:
-    #             squares += 1
-    #             screenshot = cv2.drawContours(screenshot, [cnt], -1, (0,255,255), 3)
-    #             cv2.putText(screenshot, 'Square', (x1, y1), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
-
-    # print(squares)
-    # cv2.imshow('img',screenshot)
-    # cv2.waitKey(0)

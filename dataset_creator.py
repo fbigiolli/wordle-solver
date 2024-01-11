@@ -5,9 +5,9 @@ import pandas as pd
 import pyautogui
 from image_processing import take_screenshot, preprocess, identify_letters, crop_letters
 
+
 data_directory = "C:/Users/felub/Documents/Projects/wordle-solver/images"
 output_directory = "C:/Users/felub/Documents/Projects/wordle-solver/images"
-# target_size = (63, 63)
 
 
 def create_dataset():
@@ -64,5 +64,3 @@ def get_letters():
         output_path = os.path.join(output_directory, f"letra_{i}.png")
         cv2.imwrite(output_path, letter)
         i = i+1
-
-

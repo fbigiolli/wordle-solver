@@ -95,25 +95,3 @@ class WordleSolver:
 
     def add_invalid_word(self,word:str):
         self.invalid_words.append(word)
-
-    # Spoiler, no hay
-    def search_word_with_w(self):
-        for word in self.wordset:
-            for letter in word:
-                if letter == 'W':
-                    return word
-
-
-# sample test
-# new = Wordle_Solver()
-# new.update_wordle_status(['U','R','E'],{"A":[0],"O":[4]},['-1','-1','-1','-1','-1',])
-# print(new.search_valid_word())
-# new.update_wordle_status(['B','C','N'],{"A":[1],"O":[3]},['-1','-1','-1','-1','-1',])
-# print(new.search_valid_word())
-# new.update_wordle_status(['D','S'],{"I":[1],"O":[2]},['-1','-1','-1','-1','A',])
-# print(new.search_valid_word())
-# new.update_wordle_status(['F','L'],{},['-1','O','-1','I','A',])
-# print(new.search_valid_word())
-# new.update_wordle_status(['G'],{},['-1','O','M','I','A',])
-# print(new.search_valid_word())
-        
