@@ -1,77 +1,118 @@
 import pyautogui
-import cv2
-import numpy as np
-import pytesseract
+import time
+import pandas as pd
 from wordle_solver import WordleSolver
+from sklearn.neighbors import KNeighborsClassifier
+from dataset_creator import create_dataset_list
+from image_processing import take_screenshot, preprocess, identify_letters, crop_letters_and_classify_color
+
 
 def main():
-
     # Asegurarse de que el wordle este abierto en la ventana a la que se accede al hacer alttab
-    pyautogui.hotkey('alt','tab')
+    pyautogui.hotkey('alt', 'tab')
 
-    # Screenshot de la pagina y formateo para poder procesarla con cv2
-    screenshot = pyautogui.screenshot()
-    screenshot = np.array(screenshot)
+    # Tipear la primer palabra
+    type_word('AUREO')
 
-    # Ajusto los colores de RGB a BGR para que la imagen se visualice correctamente
-    screenshot = cv2.cvtColor(screenshot, cv2.COLOR_RGB2BGR)
+    # Crear instancia de wordle solver
+    solver = WordleSolver()
 
-    # Preprocesa, encuentra y guarda las letras encontradas en la imagen.
-    preprocessed = preprocess(screenshot)
-    letters_cnt = identify_letters(preprocessed)
-    letters = []
+    # Loopear hasta encontrar la palabra del dia 
+    search_and_type_word_loop(solver)
+
+
+# Loop que identifica letras, actualiza estado y escribe una palabra candidata.
+def search_and_type_word_loop(solver):
+    prev_number_of_words_tried = 1
+    prev_prediction = 'AUREO'
     
-    for letter in letters_cnt:
-        x,y,w,h = cv2.boundingRect(letter)
-        cropped = screenshot[y:y+h, x:x+w]
-        # Encontramos el color asociado a la letra para poder clasificarla segun su estado en el Wordle. 
-        color = classify_color(cropped)
-        letters.append((cropped, color))
+    while(True):
+        # Screenshot de la pagina y formateo para poder procesarla con cv2
+        screenshot = take_screenshot()
 
-    # Nuevamente aplica threshold y filtros para poder usar pytesseract para identificar las letras.
-    
+        # Preprocesa, encuentra y guarda las letras encontradas en la imagen.
+        preprocessed = preprocess(screenshot)
+        letters_cnt = identify_letters(preprocessed)
+        letters = crop_letters_and_classify_color(letters_cnt, screenshot)
 
-# Clasifica el color segun el average. Los valores de clasificacion estan hardcodeados en base a pruebas manuales
-# para observar el valor obtenido segun cada color.
-def classify_color(cropped):
-    average_color = np.mean(cropped, axis=(0, 1))
-    if 100 < average_color[0] < 200 and 100 < average_color[1] < 200 and 100 < average_color[2] < 200:
-        color = "Gris"
-    elif 40 < average_color[0] < 50 and 170 < average_color[1] < 180 and 225 < average_color[2] < 235:
-        color = "Amarillo"
-    elif 80 < average_color[0] < 85 and 163 < average_color[1] < 168 and 75 < average_color[2] < 80:
-        color = "Verde"
-    else:
-        color = "Desconocido"
-    return color
+        # Si no hay una nueva palabra significa que la palabra del wordset era invalida, la agrega a las invalid words.
+        if prev_number_of_words_tried == len(letters) / 5:
+            solver.add_invalid_word(prev_prediction)
+            # Borra la palabra tipeada anteriormente
+            for letter in enumerate(letters[-5:]):
+                pyautogui.hotkey('backspace')
+        else:
+            # Si no entra en el if pasado, significa que encontramos una nueva palabra. Aumenta el contador
+            prev_number_of_words_tried = prev_number_of_words_tried + 1
 
-# Preprocesar la imagen
-def preprocess(img):
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
-    thresh = cv2.threshold(blurred, 200, 255,cv2.THRESH_BINARY_INV)[1]
-    return thresh
+        # Si no encontro ninguna letra, no hace falta seguir.
+        if len(letters) == 0:
+            break
 
-# Identificar las letras en la imagen ya procesada
-def identify_letters(preprocessed):
-    contours,_ = cv2.findContours(preprocessed,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    squares_cnt = []
-    for contour in contours:
-        if is_square(contour):
-            squares_cnt.append(contour)
-    return squares_cnt
+        # Predecir letras
+        predictions = (predict_word(letters))
+        update_wordle(predictions[-5:], solver)
 
-# Decide si el contorno es un cuadrado o no
-def is_square(contour):
-    approx = cv2.approxPolyDP(contour, 0.01*cv2.arcLength(contour, True), True)
-    if len(approx) == 4:
-            _,_,w,h = cv2.boundingRect(contour)
-            ratio = float(w)/h
-            # Tambien filtro todo aquello que tenga area menor a 100 para que no aparezcan cuadrados sin letras
-            if ratio >= 0.9 and ratio <= 1.1 and w*h > 100 :
-                return True
+        # Escribir la palabra
+        prev_prediction = solver.search_valid_word()
+        type_word(prev_prediction)
 
-    
+
+# Crea la lista de letras no candidatas y el diccionario de candidatas
+def update_wordle(predictions, solver):
+    non_candidate_letters = []
+    candidate_letters = {}
+    result = solver.result
+
+    for i, letter in enumerate(predictions):
+        if letter[1] == 'Gris':
+            non_candidate_letters.append(letter[0])
+        elif letter[1] == 'Amarillo':
+            # Si no esta definido
+            if not letter[0] in candidate_letters:
+                candidate_letters[letter[0]] = [i]
+            # Si esta definido
+            else:
+                candidate_letters[letter[0]] = i
+        elif letter[1] == 'Verde':
+            result[i] = letter[0]
+
+    solver.update_wordle_status(non_candidate_letters,candidate_letters,result)
+
+
+# Crea el modelo KNN
+def create_knn_model(images, labels):
+    knn_model = KNeighborsClassifier(n_neighbors=1)
+    knn_model.fit(images, labels)
+    return knn_model
+
+
+# Escribe la palabra y espera
+def type_word(word):
+    pyautogui.write(word,interval=0.05)
+    pyautogui.hotkey('enter')
+    # Esperar el tiempo suficiente a que las letras tomen color
+    time.sleep(1.3)
+
+
+# Ya teniendo el modelo KNN, predice las letras
+def predict_word(letters):
+    # Crear modelo knn para identificar los caracteres
+    images, labels = create_dataset_list()
+    knn_model = create_knn_model(images, labels)
+
+    res = []
+    # Identificar las letras
+    for letter in letters:
+        current = letter[0].reshape(1,-1)
+        res.append((knn_model.predict(current)[0],letter[1]))
+
+    # Darlas vuelta
+    res.reverse()
+
+    return res
+
+
 main()
 
     # contours,_ = cv2.findContours(preprocessed,cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
