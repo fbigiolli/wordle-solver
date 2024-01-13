@@ -1,5 +1,8 @@
 # Wordle Solver
 
+## Demo
+![demo](https://github.com/fbigiolli/wordle-solver/assets/102247438/5237d8e6-fe78-4fc9-aec5-8d281f31b8b8)
+
 ## About
 Creé este proyecto como una excusa para aprender sobre machine learning, computer vision, GUI automation y procesamiento de imágenes. Se trata de un programa que resuelve el famoso juego wordle en su [versión en español](https://lapalabradeldia.com/). Para usarlo hay que tener el wordle en la ventana más proxima, de modo que al hacer alt tab quede abierta la ventana, y correr main.py.
 
